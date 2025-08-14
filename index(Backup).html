@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FileShare Pro</title>
+  <style>
+    /* Global Styles */
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #232344);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      padding: 2rem;
+    }
+    header h1 {
+      font-size: 2rem;
+      margin: 0;
+      background: linear-gradient(45deg, #00ffb7, #00bfff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header p {
+      opacity: 0.8;
+    }
+
+    /* Upload Box */
+    .upload-box {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px dashed rgba(255, 255, 255, 0.3);
+      border-radius: 20px;
+      padding: 2rem;
+      text-align: center;
+      margin: 1rem auto;
+      width: 90%;
+      max-width: 500px;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .upload-box:hover {
+      border-color: #00ffb7;
+      box-shadow: 0 0 15px rgba(0, 255, 183, 0.3);
+    }
+    .upload-box.dragover {
+      border-color: #00ffb7;
+      background: rgba(0, 255, 183, 0.1);
+      transform: scale(1.02);
+    }
+
+    /* Upload Button */
+    .upload-btn {
+      display: inline-block;
+      padding: 0.8rem 1.5rem;
+      background: linear-gradient(45deg, #00ffb7, #00bfff);
+      color: black;
+      border-radius: 30px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: transform 0.2s ease;
+      text-decoration: none;
+    }
+    .upload-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      margin-top: 1rem;
+      height: 6px;
+      display: none;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(45deg, #00ffb7, #00bfff);
+      border-radius: 10px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    /* Status Message */
+    .status-message {
+      margin-top: 1rem;
+      padding: 0.5rem;
+      border-radius: 10px;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .status-message.success {
+      background: rgba(0, 255, 183, 0.2);
+      color: #00ffb7;
+    }
+    .status-message.error {
+      background: rgba(255, 0, 100, 0.2);
+      color: #ff6b94;
+    }
+
+    /* File List */
+    .file-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      width: 90%;
+      margin: 2rem auto;
+    }
+
+    /* File Item */
+    .file-item {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.8rem 1rem;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(5px);
+      transition: all 0.3s ease;
+      animation: slideIn 0.3s ease;
+    }
+    .file-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* File Info */
+    .file-info {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .file-name {
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+    .file-meta {
+      font-size: 0.8rem;
+      opacity: 0.6;
+    }
+
+    /* File Actions */
+    .file-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .file-actions button {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #00ffb7;
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .file-actions button:hover {
+      background: rgba(0, 255, 183, 0.2);
+      border-color: #00ffb7;
+      transform: scale(1.05);
+    }
+    .file-actions button.delete:hover {
+      background: rgba(255, 0, 100, 0.2);
+      border-color: #ff6b94;
+      color: #ff6b94;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 1rem;
+      margin-top: auto;
+      opacity: 0.7;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 2px solid #00ffb7;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      margin-right: 0.5rem;
+    }
+
+    /* Animations */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 600px) {
+      .file-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+      .file-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .file-actions button {
+        flex: 1;
+        justify-content: center;
+      }
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 2rem;
+      opacity: 0.6;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>📂 FileShare Pro</h1>
+    <p>Share files instantly across your devices</p>
+  </header>
+
+  <main>
+    <div class="upload-box" id="drop-area">
+      <p>Drag & Drop files here or click to browse</p>
+      <label for="fileInput" class="upload-btn">Choose Files</label>
+      <input type="file" id="fileInput" hidden multiple>
+      
+      <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      
+      <div class="status-message" id="statusMessage"></div>
+    </div>
+
+    <div class="file-list" id="fileList">
+      <div class="empty-state" id="emptyState">
+        No files uploaded yet. Start by uploading your first file!
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>🚀 Built with ❤️ — By Shubham</p>
+  </footer>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    // Connect to Supabase (consider moving to environment variables)
+    const SUPABASE_URL = "https://jjrhyeturocimlzbuavi.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqcmh5ZXR1cm9jaW1semJ1YXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMzkwOTcsImV4cCI6MjA3MDcxNTA5N30.qq3I8gFu3I8dz0r_igSjbD9xKSmG6QFmYjGSWuBS2Iw";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // DOM Elements
+    const fileInput = document.getElementById("fileInput");
+    const dropArea = document.getElementById("drop-area");
+    const fileList = document.getElementById("fileList");
+    const emptyState = document.getElementById("emptyState");
+    const progressContainer = document.getElementById("progressContainer");
+    const progressBar = document.getElementById("progressBar");
+    const statusMessage = document.getElementById("statusMessage");
+
+    // Load files on page load
+    loadFiles();
+
+    // File selection
+    fileInput.addEventListener("change", (e) => handleFiles(e.target.files));
+
+    // Drag & drop events
+    dropArea.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropArea.classList.add("dragover");
+    });
+
+    dropArea.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      dropArea.classList.remove("dragover");
+    });
+
+    dropArea.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropArea.classList.remove("dragover");
+      handleFiles(e.dataTransfer.files);
+    });
+
+    // Click to upload
+      document.querySelector('.upload-btn').addEventListener("click", (e) => {
+        e.stopPropagation(); 
+      });
+
+    // Show status message
+    function showStatus(message, type = 'success') {
+      statusMessage.textContent = message;
+      statusMessage.className = `status-message ${type}`;
+      statusMessage.style.display = 'block';
+      
+      setTimeout(() => {
+        statusMessage.style.display = 'none';
+      }, 3000);
+    }
+
+    // Show/hide progress
+    function showProgress(show = true) {
+      progressContainer.style.display = show ? 'block' : 'none';
+      if (!show) progressBar.style.width = '0%';
+    }
+
+    // Update progress
+    function updateProgress(percent) {
+      progressBar.style.width = `${percent}%`;
+    }
+
+    // Format file size
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Get file icon
+    function getFileIcon(fileName) {
+      const ext = fileName.split('.').pop().toLowerCase();
+      const icons = {
+        'pdf': '📄', 'doc': '📝', 'docx': '📝', 'txt': '📄',
+        'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️', 'svg': '🖼️',
+        'mp4': '🎥', 'avi': '🎥', 'mov': '🎥', 'wmv': '🎥',
+        'mp3': '🎵', 'wav': '🎵', 'flac': '🎵', 'aac': '🎵',
+        'zip': '📦', 'rar': '📦', '7z': '📦', 'tar': '📦',
+        'js': '💻', 'html': '💻', 'css': '💻', 'py': '💻', 'java': '💻'
+      };
+      return icons[ext] || '📄';
+    }
+
+    // Upload files with progress
+    async function handleFiles(files) {
+      if (files.length === 0) return;
+      
+      showProgress(true);
+      let uploaded = 0;
+      const total = files.length;
+
+      for (let file of files) {
+        try {
+          const filePath = `${Date.now()}_${file.name}`;
+          const { error } = await supabaseClient
+            .storage
+            .from("files")
+            .upload(filePath, file);
+
+          if (error) {
+            throw error;
+          }
+
+          uploaded++;
+          updateProgress((uploaded / total) * 100);
+        } catch (error) {
+          showStatus(`❌ Upload failed: ${error.message}`, 'error');
+          showProgress(false);
+          return;
+        }
+      }
+
+      showProgress(false);
+      showStatus(`✅ Successfully uploaded ${uploaded} file${uploaded > 1 ? 's' : ''}!`);
+      await loadFiles();
+      
+      // Reset file input
+      fileInput.value = '';
+    }
+
+    // Load and display files
+    async function loadFiles() {
+      try {
+        const { data, error } = await supabaseClient
+          .storage
+          .from("files")
+          .list("", { 
+            limit: 100, 
+            sortBy: { column: "created_at", order: "desc" } 
+          });
+
+        if (error) throw error;
+
+        // Filter out placeholder files
+        const files = data.filter(file => file.name !== ".emptyFolderPlaceholder");
+        
+        // Show/hide empty state
+        emptyState.style.display = files.length === 0 ? 'block' : 'none';
+        
+        // Clear existing file list
+        const existingItems = fileList.querySelectorAll('.file-item');
+        existingItems.forEach(item => item.remove());
+
+        // Create file items
+        files.forEach(file => {
+          const originalName = file.name.replace(/^\d+_/, "");
+          const fileUrl = `${SUPABASE_URL}/storage/v1/object/public/files/${file.name}`;
+          const fileSize = formatFileSize(file.metadata?.size || 0);
+          const fileIcon = getFileIcon(originalName);
+
+          const item = document.createElement("div");
+          item.classList.add("file-item");
+
+          const fileInfo = document.createElement("div"); //https://jjrhyeturocimlzbuavi.storage.supabase.co/storage/v1/s3
+          fileInfo.classList.add("file-info");
+
+          const fileName = document.createElement("div");
+          fileName.classList.add("file-name");
+          fileName.textContent = `${fileIcon} ${originalName}`;
+
+          const fileMeta = document.createElement("div");
+          fileMeta.classList.add("file-meta");
+          fileMeta.textContent = `${fileSize} • Uploaded ${new Date(file.created_at).toLocaleDateString()}`;
+
+          fileInfo.append(fileName, fileMeta);
+
+          const actions = document.createElement("div");
+          actions.classList.add("file-actions");
+
+          // Download button
+          const downloadBtn = document.createElement("button");
+          downloadBtn.innerHTML = "⬇️ Download";
+          downloadBtn.onclick = () => window.open(fileUrl, "_blank");
+
+          // Rename button
+          const renameBtn = document.createElement("button");
+          renameBtn.innerHTML = "✏️ Rename";
+          renameBtn.onclick = () => renameFile(file.name);
+
+          // Delete button
+          const deleteBtn = document.createElement("button");
+          deleteBtn.classList.add("delete");
+          deleteBtn.innerHTML = "🗑️ Delete";
+          deleteBtn.onclick = () => deleteFile(file.name, originalName);
+
+          actions.append(downloadBtn, renameBtn, deleteBtn);
+          item.append(fileInfo, actions);
+          fileList.appendChild(item);
+        });
+
+      } catch (error) {
+        showStatus(`❌ Failed to load files: ${error.message}`, 'error');
+        console.error("Error loading files:", error);
+      }
+    }
+
+    // Delete file with confirmation
+    async function deleteFile(fileName, displayName) {
+      if (!confirm(`Are you sure you want to delete "${displayName}"?`)) return;
+
+      try {
+        const { error } = await supabaseClient
+          .storage
+          .from("files")
+          .remove([fileName]);
+
+        if (error) throw error;
+
+        showStatus(`🗑️ File "${displayName}" deleted successfully!`);
+        await loadFiles();
+      } catch (error) {
+        showStatus(`❌ Delete failed: ${error.message}`, 'error');
+        console.error("Delete error:", error);
+      }
+    }
+
+    // Rename file
+    async function renameFile(oldFileName) {
+      const currentName = oldFileName.replace(/^\d+_/, "");
+      const newName = prompt("Enter new file name:", currentName);
+      
+      if (!newName || newName === currentName) return;
+
+      try {
+        // Download file content
+        const { data: blob, error: downloadError } = await supabaseClient
+          .storage
+          .from("files")
+          .download(oldFileName);
+          
+        if (downloadError) throw downloadError;
+
+        // Upload with new name
+        const newPath = `${Date.now()}_${newName}`;
+        const { error: uploadError } = await supabaseClient
+          .storage
+          .from("files")
+          .upload(newPath, blob, { upsert: false });
+          
+        if (uploadError) throw uploadError;
+
+        // Delete old file
+        const { error: deleteError } = await supabaseClient
+          .storage
+          .from("files")
+          .remove([oldFileName]);
+          
+        if (deleteError) {
+          console.warn("Could not delete old file:", deleteError);
+          showStatus(`⚠️ Renamed to "${newName}" but couldn't delete old file`, 'error');
+        } else {
+          showStatus(`✏️ File renamed to "${newName}" successfully!`);
+        }
+
+        await loadFiles();
+      } catch (error) {
+        showStatus(`❌ Rename failed: ${error.message}`, 'error');
+        console.error("Rename error:", error);
+      }
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+  </script>
+</body>
+</html>

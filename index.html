@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FileShare Pro</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>📂 FileShare Pro</h1>
+    <p>Share files instantly across your devices</p>
+  </header>
+
+  <main>
+    <div class="upload-box" id="drop-area">
+      <p>Drag & Drop files here or click to browse</p>
+      <label for="fileInput" class="upload-btn">Choose Files</label>
+      <input type="file" id="fileInput" hidden multiple>
+      
+      <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      
+      <div class="status-message" id="statusMessage"></div>
+    </div>
+
+    <div class="file-list" id="fileList">
+      <div class="empty-state" id="emptyState">
+        No files uploaded yet. Start by uploading your first file!
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>🚀 Built with ❤️ — By Shubham</p>
+  </footer>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="script.js"></script>
+</body>
+</html>
